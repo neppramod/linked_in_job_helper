@@ -82,6 +82,23 @@ $('writeCsv').addEventListener('click', async () => {
   status(`Written to Downloads/${settings.csvPath}`);
 });
 $('exportCsv').addEventListener('click', () => writeCsv(settings, { force: true, saveAs: true }));
+$('importCsv').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const r = await importCsv(await file.text());
+    let msg = `Added ${r.added} job${r.added === 1 ? '' : 's'}.`;
+    if (r.existing) msg += ` ${r.existing} already in the Tracker (kept as they are).`;
+    if (r.skipped) msg += ` ${r.skipped} row${r.skipped === 1 ? '' : 's'} skipped (no job link).`;
+    status(msg, r.added > 0 || r.existing > 0);
+    if (r.added) csvSoon();
+    render();
+  } catch (err) {
+    status(err.message, false);
+  }
+});
 $('clearAll').addEventListener('click', async () => {
   if (!confirm('Delete ALL saved jobs? Export a CSV first if you want a copy.')) return;
   await setJobs([]);

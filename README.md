@@ -11,7 +11,7 @@ Nothing else to install.
   **Strong**, **Mixed** or **Weak**. It also shows the salary (when listed) and what kind of company it is.
 - **Hide jobs you don't want.** By words, by company, jobs you already applied to, and (if you choose)
   government and defense jobs.
-- **Tracker page.** All saved jobs with status (Saved, Applied, Interview, Offer…), notes, and CSV export.
+- **Tracker page.** All saved jobs with status (Saved, Applied, Interview, Offer…), notes, and CSV export and import.
 
 Everything stays in your own browser. Nothing is sent anywhere.
 
@@ -86,6 +86,10 @@ Other things:
 - If Chrome asks where to save every time: open Chrome settings → **Downloads** → turn off
   **"Ask where to save each file before downloading"**.
 - Columns: Date saved, Company, Job title, Link, Status, Fit, Salary, Industry, Notes.
+- The extension writes this file but doesn't read it. Change status and notes on the Tracker page:
+  changes made in Excel are replaced the next time a job is saved.
+- To get jobs back from the file (new computer, reinstall, different folder): Tracker → **Import CSV…**.
+  Jobs already in the Tracker are kept as they are; only missing ones are added.
 
 ---
 
@@ -112,6 +116,7 @@ Your settings and saved jobs are kept. They're stored in Chrome, not in the fold
 
 > **Before you remove the extension**, export your jobs (Tracker → **Export CSV as…**) and your settings
 > (Settings → **Export settings**). Removing the extension deletes them from Chrome.
+> To bring them back: Tracker → **Import CSV…** and Settings → **Import settings**.
 
 ---
 

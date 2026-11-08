@@ -20,7 +20,8 @@ so nothing may require extra software (no Python, Node, native host).
   - `fit.js`: fit panel, company type, salary, badges. Stores `fitInfo` for the popup.
 - `shared.js`: `extractJobInfo()` (runs in the page via `chrome.scripting`), saved jobs (`jobs` in
   `chrome.storage.local`), `toCsv()`/`writeCsv()` (data URL + `chrome.downloads`, `conflictAction:
-  'overwrite'`), `fillTemplate()`.
+  'overwrite'`), `parseCsv()`/`jobsFromCsv()`/`importCsv()` (Tracker → Import CSV; matches columns by
+  heading, adds only jobs not already saved), `fillTemplate()`.
 - Pages: `popup.*`, `options.*` (Settings), `tracker.*`, `letter.*` (print to PDF), `page.css`.
 - `background.js`: first-run Settings tab, SETUP.md sync on request, Alt+Shift+R remove.
 
