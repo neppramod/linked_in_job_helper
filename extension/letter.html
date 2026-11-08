@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cover Letter</title>
+  <link rel="stylesheet" href="page.css">
+  <style>
+    .toolbar { max-width: 8.5in; margin: 18px auto 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 0 8px; }
+    .notes { max-width: 8.5in; margin: 10px auto 0; padding: 0 8px; }
+    .warn { background: #fff2db; color: #8a4b00; border: 1px solid #e8b766; border-radius: 6px; padding: 8px 12px; margin-top: 8px; }
+    .paper { background: #fff; max-width: 8.5in; min-height: 11in; margin: 16px auto 40px; padding: 1in;
+      box-shadow: 0 1px 6px rgba(0,0,0,.15); font: 11.5pt/1.45 Georgia, "Times New Roman", serif; color: #111; }
+    .paper p { margin: 0 0 12pt; }
+    @page { size: letter; margin: 0.9in; }
+    @media print {
+      body { background: #fff; }
+      header, .toolbar, .notes { display: none !important; }
+      .paper { box-shadow: none; margin: 0; padding: 0; max-width: none; min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <img src="icons/icon48.png" alt="">
+  <h1>Cover letter</h1>
+  <nav><a href="options.html">Settings</a><a href="tracker.html">Tracker</a></nav>
+</header>
+<div class="toolbar">
+  <button id="print" class="primary">Save as PDF / Print</button>
+  <button id="copy">Copy text</button>
+  <button id="txt">Download .txt</button>
+  <button id="edit">Edit template</button>
+  <span id="status" class="status"></span>
+</div>
+<div class="notes" id="notes"></div>
+<div class="paper" id="paper"></div>
+
+<script src="settings-store.js"></script>
+<script src="shared.js"></script>
+<script src="letter.js"></script>
+</body>
+</html>

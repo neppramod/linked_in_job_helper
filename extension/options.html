@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Job Helper · Settings</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+<header>
+  <img src="icons/icon48.png" alt="">
+  <h1>LinkedIn Job Helper · Settings</h1>
+  <nav><a href="options.html" class="active">Settings</a><a href="tracker.html">Tracker</a></nav>
+</header>
+<main>
+
+  <section id="welcome" class="welcome" hidden>
+    <h2>Welcome! Set up in 3 steps</h2>
+    <ol>
+      <li><b>Government and defense jobs:</b> pick yes or no (required).</li>
+      <li><b>Your skills:</b> add what you're good at, so each job gets a fit rating.</li>
+      <li><b>Cover letter:</b> replace the [bracketed] parts of the template with your own text.</li>
+    </ol>
+    <p class="help">Then click <b>Save settings</b> at the bottom. You can come back here any time:
+      right-click the extension icon → <b>Options</b>.</p>
+  </section>
+
+  <section>
+    <h2>Two ways to set this up</h2>
+    <p class="help">Fill in this page and click <b>Save settings</b>, <b>or</b> edit <code>SETUP.md</code> in the
+      extension folder with Notepad. The extension reads SETUP.md automatically when the file changes.
+      If you use this page, click <b>Download SETUP.md</b> afterwards and put the file in the extension folder,
+      so both stay the same.</p>
+    <div class="row">
+      <button id="downloadSetup" type="button">Download SETUP.md</button>
+      <button id="loadSetup" type="button">Load SETUP.md now</button>
+    </div>
+    <p id="setupMsg" class="help"></p>
+  </section>
+
+  <!-- 1. Government / defense -->
+  <section id="gov-section">
+    <h2>1. Government and defense jobs</h2>
+    <p class="help">Do you want to see jobs with the government, the military, or companies that need a security clearance?</p>
+    <label class="choice"><input type="radio" name="govMode" value="include">
+      <span><b>Yes, show them</b>These jobs show up like any other job.</span></label>
+    <label class="choice"><input type="radio" name="govMode" value="avoid">
+      <span><b>No, hide them</b>They are hidden from the list. If you open one, you see a red warning and it is rated Weak.</span></label>
+    <p id="gov-error" class="error" hidden>Please pick one.</p>
+    <details>
+      <summary>See exactly what "No, hide them" hides</summary>
+      <p class="help">These are added on top of your own lists below. Matching ignores case and only matches whole words.</p>
+      <b>Hides a job card if the title, company or location has:</b>
+      <div class="preset" id="preset-hideKeywords"></div>
+      <b>When you open a job, flags it (and hides it from the list after that) if the description has:</b>
+      <div class="preset" id="preset-flagDescription"></div>
+      <b>Shows a red warning if LinkedIn's industry for the company has:</b>
+      <div class="preset" id="preset-avoidIndustries"></div>
+    </details>
+  </section>
+
+  <!-- 2. Skills -->
+  <section>
+    <h2>2. Your skills</h2>
+    <p class="help">Write one skill per line. If a skill has other names, put them on the same line with
+      <code>|</code> between them, for example <code>Excel | spreadsheets</code>. The extension looks for these
+      words in each job and rates the job: <b>Strong</b>, <b>Mixed</b> or <b>Weak</b>.</p>
+
+    <label class="field" for="strengths">Your skills</label>
+    <textarea id="strengths" placeholder="Project management | PMP&#10;Excel | spreadsheets&#10;SQL&#10;Customer support | client service"></textarea>
+
+    <label class="field" for="mustHave">Skills the job must have</label>
+    <p class="help">If a job does not mention one of these, it is rated Weak. Leave this empty if you have none.</p>
+    <textarea id="mustHave" placeholder="SQL"></textarea>
+
+    <label class="field" for="gaps">Things you do not want</label>
+    <p class="help">Skills you do not have, or work you do not want to do. The extension warns you when a job mentions them.</p>
+    <textarea id="gaps" placeholder="Cold calling | quota&#10;PhD required&#10;Night shift"></textarea>
+
+    <div class="row">
+      <div><label class="field" for="heavyGap">How many times a "thing you do not want" must appear to make the job Mixed</label>
+        <input type="number" id="heavyGap" min="1" max="20"></div>
+      <div><label class="field" for="strongMin">How many of your skills a job needs to be Strong</label>
+        <input type="number" id="strongMin" min="1" max="30"></div>
+    </div>
+  </section>
+
+  <!-- 3. Job filter -->
+  <section>
+    <h2>3. Hiding and warnings</h2>
+    <p class="help">One item per line. These are your own lists. They work whatever you picked in question 1.</p>
+
+    <label class="field" for="hideKeywords">Hide jobs with these words (in the title, company name or location)</label>
+    <textarea id="hideKeywords" placeholder="intern&#10;unpaid&#10;commission only"></textarea>
+
+    <label class="field" for="hideCompanies">Hide jobs from these companies</label>
+    <textarea id="hideCompanies" placeholder="Example Staffing Inc"></textarea>
+
+    <label class="field" for="flagDescription">Warn me when a job description has these words</label>
+    <textarea id="flagDescription" placeholder="100% travel&#10;relocation required"></textarea>
+
+    <label class="field" for="avoidIndustries">Warn me about these industries (from "About the company")</label>
+    <textarea id="avoidIndustries" placeholder="Tobacco&#10;Gambling Facilities and Casinos"></textarea>
+
+    <label class="check"><input type="checkbox" id="hideApplied"> Hide jobs I already applied to</label>
+    <label class="check"><input type="checkbox" id="avoidIsWeak"> Rate a job Weak if it is a company type I do not want</label>
+
+    <label class="field" for="filterAction">Hidden jobs</label>
+    <select id="filterAction">
+      <option value="hide">Hide them completely (click the grey box at the bottom left to see them)</option>
+      <option value="mark">Show them with a red border</option>
+    </select>
+  </section>
+
+  <!-- 4. Saving jobs -->
+  <section>
+    <h2>4. Saving jobs</h2>
+    <p class="help">Clicking <b>Save job</b> in the popup copies the job to your clipboard, adds it to the Tracker,
+      and writes the whole list to a CSV file you can open in Excel or Google Sheets.</p>
+
+    <label class="check"><input type="checkbox" id="writeCsv"> Update my spreadsheet (CSV file) every time I save a job</label>
+    <label class="field" for="csvPath">Where to save the spreadsheet (inside your Downloads folder)</label>
+    <input type="text" id="csvPath">
+    <p class="help">Tip: close the file in Excel before saving a job, or Chrome may save a copy like <code>jobs (1).csv</code>.
+      If Chrome asks where to save each time, turn off "Ask where to save each file" in Chrome's download settings.</p>
+
+    <label class="field" for="copyFormat">What to copy when you save a job</label>
+    <textarea id="copyFormat"></textarea>
+    <p class="help">Placeholders: <code>{{COMPANY}}</code> <code>{{ROLE}}</code> <code>{{LINK}}</code> <code>{{DATE}}</code></p>
+
+    <label class="check"><input type="checkbox" id="openLetterAfterSave"> Open the cover letter after I save a job</label>
+  </section>
+
+  <!-- 5. Cover letter -->
+  <section>
+    <h2>5. Your cover letter</h2>
+    <p class="help">Replace everything in [square brackets] with your own words. These are filled in for each job:
+      <code>{{COMPANY}}</code> <code>{{ROLE}}</code> <code>{{DATE}}</code> <code>{{LINK}}</code>.
+      To make words bold, put <code>**</code> on both sides. Leave an empty line between paragraphs.</p>
+    <textarea id="letterTemplate" class="big"></textarea>
+    <div class="row" style="align-items:flex-end">
+      <div><label class="field" for="dateFormat">Date in the cover letter</label>
+        <select id="dateFormat">
+          <option value="long">November 7, 2026</option>
+          <option value="short">11/07/2026</option>
+          <option value="iso">2026-11-07</option>
+        </select></div>
+      <div><button id="resetTemplate" type="button">Reset template to the example</button></div>
+    </div>
+  </section>
+
+  <!-- 6. Backup -->
+  <section>
+    <h2>6. Backup</h2>
+    <p class="help">Save your settings to a file, or load them on another computer.</p>
+    <div class="row">
+      <button id="exportSettings" type="button">Export settings</button>
+      <button id="importSettings" type="button">Import settings</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <button id="resetAll" type="button" class="danger">Reset everything to defaults</button>
+    </div>
+  </section>
+</main>
+
+<div class="bar">
+  <button id="save" class="primary">Save settings</button>
+  <span id="status" class="status"></span>
+</div>
+
+<script src="settings-store.js"></script>
+<script src="setup-md.js"></script>
+<script src="options.js"></script>
+</body>
+</html>

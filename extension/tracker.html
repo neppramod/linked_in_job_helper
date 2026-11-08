@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Job Helper · Tracker</title>
+  <link rel="stylesheet" href="page.css">
+  <style>
+    main { max-width: 1200px; }
+    .tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    .tools input[type=text] { width: 260px; font-family: inherit; }
+    td select, td input { font: 13px system-ui, sans-serif; padding: 4px 6px; }
+    td input.notes { width: 100%; min-width: 160px; }
+    td.actions { white-space: nowrap; }
+    td.actions button { padding: 4px 8px; font-size: 12px; }
+    .empty { padding: 30px; text-align: center; color: var(--muted); }
+  </style>
+</head>
+<body>
+<header>
+  <img src="icons/icon48.png" alt="">
+  <h1>LinkedIn Job Helper · Tracker</h1>
+  <nav><a href="options.html">Settings</a><a href="tracker.html" class="active">Tracker</a></nav>
+</header>
+<main>
+  <div class="tools">
+    <input type="text" id="search" placeholder="Search company, title, notes…">
+    <select id="statusFilter"><option value="">All statuses</option></select>
+    <button id="writeCsv">Write CSV now</button>
+    <button id="exportCsv">Export CSV as…</button>
+    <button id="clearAll" class="danger">Delete all</button>
+    <span id="status" class="status"></span>
+  </div>
+  <p class="help" id="csvHelp"></p>
+  <table>
+    <thead><tr><th>Saved</th><th>Company</th><th>Job title</th><th>Status</th><th>Fit</th><th>Salary</th><th>Notes</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="empty" class="empty" hidden>No saved jobs yet. Open a job on LinkedIn, click the extension icon, then <b>Save job</b>.</div>
+</main>
+<script src="settings-store.js"></script>
+<script src="shared.js"></script>
+<script src="tracker.js"></script>
+</body>
+</html>

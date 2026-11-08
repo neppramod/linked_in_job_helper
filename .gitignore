@@ -1,0 +1,13 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# Personal exports (keep these out of the repo)
+job-helper-settings.json
+*.csv
