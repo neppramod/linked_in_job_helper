@@ -75,6 +75,7 @@ const SETUP_SECTIONS = [
       'Replace everything in [square brackets] with your own words.',
       'These are filled in for each job: {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}}',
       'To make words bold, put ** on both sides: **like this**',
+      'Start a line with # and a space to make it a heading, for your name: # Jane Doe',
       'Leave an empty line between paragraphs.'] }
 ];
 

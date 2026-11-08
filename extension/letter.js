@@ -7,11 +7,14 @@ let job = null;
 
 const esc = (t) => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// Blank line = new paragraph, single line break kept, **bold** supported.
+// Blank line = new paragraph, single line break kept, **bold** supported,
+// a paragraph starting with "# " is a heading (for your name).
 function render(text) {
-  return text.split(/\n\s*\n/).map(par =>
-    '<p>' + esc(par.trim()).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') + '</p>'
-  ).join('');
+  const inline = (t) => esc(t.trim()).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/ *\n/g, '<br>');
+  return text.split(/\n\s*\n/).map(par => {
+    const h = par.trim().match(/^#{1,3}\s+(.+)$/s);
+    return h ? '<h1 class="name">' + inline(h[1]) + '</h1>' : '<p>' + inline(par) + '</p>';
+  }).join('');
 }
 
 function note(msg) {
@@ -35,7 +38,7 @@ function status(msg, ok = true) {
     return;
   }
   const filled = fillTemplate(settings.letterTemplate, job, settings);
-  plainText = filled.replace(/\*\*(.+?)\*\*/g, '$1');
+  plainText = filled.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#{1,3}\s+/gm, '').replace(/ +$/gm, '');
   $('paper').innerHTML = render(filled);
 
   // The PDF file name comes from the page title.
@@ -45,7 +48,8 @@ function status(msg, ok = true) {
   // Checks, so a letter with leftovers isn't sent by mistake.
   const leftover = [...new Set(filled.match(/\{\{\s*[A-Za-z]+\s*\}\}/g) || [])];
   if (leftover.length) note('Unknown placeholders (only {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}} work): ' + leftover.join(' '));
-  const brackets = [...new Set(filled.match(/\[[^\]\n]{2,80}\]/g) || [])];
+  // Only brackets with words in them, so a name like "[1]Corp" is not flagged.
+  const brackets = [...new Set(filled.match(/\[[^\]\n]{0,80}[A-Za-z]{2}[^\]\n]{0,80}\]/g) || [])];
   if (brackets.length) note('Your template still has [bracketed] parts to replace: ' + brackets.slice(0, 6).join(' ') +
     (brackets.length > 6 ? ' …' : '') + '. Click "Edit template".');
   if (!job.company || !job.title) note('The company or job title is empty. Check the job in the Tracker.');
