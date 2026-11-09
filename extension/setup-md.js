@@ -44,10 +44,12 @@ const SETUP_SECTIONS = [
       'Example:   - Tobacco'] },
 
   { title: '9. Other choices (tick all you want)', type: 'checks',
-    options: [['hideApplied', 'Hide jobs I already applied to'],
+    options: [['autoSave', 'Save the job as soon as I click the extension icon'],
+      ['hideApplied', 'Hide jobs I already applied to'],
       ['avoidIsWeak', 'Rate a job Weak if it is a company type I do not want'],
       ['writeCsv', 'Update my spreadsheet (CSV file) every time I save a job'],
-      ['openLetterAfterSave', 'Open the cover letter after I save a job']] },
+      ['openLetterAfterSave', 'Open the cover letter after I save a job'],
+      ['saveLetterPdf', 'Save the cover letter as a PDF every time I save a job']] },
 
   { title: '10. Hidden jobs (pick one)', type: 'choice', key: 'filterAction',
     options: [['hide', 'Hide them completely'], ['mark', 'Show them with a red border']] },
@@ -65,12 +67,16 @@ const SETUP_SECTIONS = [
       'Close the file in Excel before you save a new job.',
       'If it is open, Chrome may make a second copy, like jobs (1).csv.'] },
 
-  { title: '14. What to copy when you save a job', type: 'code', key: 'copyFormat',
+  { title: '14. Where to save the cover letter PDF', type: 'text', key: 'letterFolder',
+    help: ['A folder inside your Downloads folder.',
+      'Only the newest cover letter is kept: the old one is deleted when you save a new job.'] },
+
+  { title: '15. What to copy when you save a job', type: 'code', key: 'copyFormat',
     help: ['The text between the two ``` lines is copied.',
       'These are replaced for each job:',
       '{{COMPANY}} = company name, {{ROLE}} = job title, {{LINK}} = job link, {{DATE}} = today'] },
 
-  { title: '15. Your cover letter', type: 'code', key: 'letterTemplate',
+  { title: '16. Your cover letter', type: 'code', key: 'letterTemplate',
     help: ['Write your letter between the two ``` lines.',
       'Replace everything in [square brackets] with your own words.',
       'These are filled in for each job: {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}}',

@@ -30,6 +30,8 @@
 </head>
 <body>
   <div id="setup" class="setup" hidden>Setup isn't finished. <a id="openSetup">Open Settings</a></div>
+  <div id="noFolder" class="setup" hidden>No folder chosen yet, so Chrome asks where to save each file.
+    <div style="margin-top:6px"><button id="openFolder" class="primary">Choose folder…</button></div></div>
   <div class="top">
     <label class="label" for="company">Company</label>
     <input id="company" type="text" placeholder="Company name">
@@ -43,6 +45,7 @@
     <button id="save" class="primary" disabled>Save job</button>
     <button id="letter" disabled>Cover letter</button>
     <button id="remove" class="danger" hidden>Remove</button>
+    <button id="allow" class="primary" hidden>Allow</button>
   </div>
   <footer>
     <a id="openTracker">Tracker</a>
@@ -50,6 +53,8 @@
   </footer>
   <script src="settings-store.js"></script>
   <script src="shared.js"></script>
+  <script src="pdf.js"></script>
+  <script src="files.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

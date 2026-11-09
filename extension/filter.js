@@ -208,7 +208,7 @@ function scanDescription() {
 
   if (!flagged.has(id)) {
     flagged.add(id);
-    chrome.storage.local.set({ flaggedJobs: [...flagged].slice(-5000) });
+    storeLocal({ flaggedJobs: [...flagged].slice(-5000) });
   }
 }
 
@@ -242,11 +242,14 @@ function scan() {
 
 // LinkedIn is a single-page app: rescan when the page changes.
 let timer;
-new MutationObserver((muts) => {
+const observer = new MutationObserver((muts) => {
+  // The extension was reloaded: this old copy stops. Refreshing the page starts the new one.
+  if (!extensionAlive()) { observer.disconnect(); return; }
   // Ignore changes made by the extension itself (pill, banner, fit panel, badges).
   if (muts.every(m => isOurs(m.target)
     || (m.addedNodes.length + m.removedNodes.length > 0
         && [...m.addedNodes, ...m.removedNodes].every(n => n.nodeType === 1 && n.matches?.(OURS))))) return;
   // Throttle: at most one scan every 300 ms, even if the page never stops changing.
-  if (!timer) timer = setTimeout(() => { timer = null; scan(); }, 300);
-}).observe(document.body, { childList: true, subtree: true });
+  if (!timer) timer = setTimeout(() => { timer = null; if (extensionAlive()) scan(); }, 300);
+});
+observer.observe(document.body, { childList: true, subtree: true });

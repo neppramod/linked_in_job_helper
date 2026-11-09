@@ -113,9 +113,15 @@ async function addJob(info, extra = {}) {
 
 async function removeJob(link) {
   const jobs = await getJobs();
-  const left = jobs.filter(j => !sameJob(j.link, link));
-  await setJobs(left);
-  return left.length < jobs.length;
+  const gone = jobs.find(j => sameJob(j.link, link)) || null;
+  await setJobs(jobs.filter(j => !sameJob(j.link, link)));
+  return gone;   // the removed job, or null
+}
+
+// Was this job removed? removed is a job id, a list of ids, or '*' for all.
+function isRemoved(jobId, removed) {
+  const list = [].concat(removed || []);
+  return list.includes('*') || list.includes(jobId);
 }
 
 async function updateJob(id, patch) {
@@ -220,18 +226,148 @@ async function importCsv(text) {
   return { added, existing, skipped };
 }
 
-// Writes all saved jobs to Downloads/<csvPath>, replacing the old file.
+// ---------- File names (must work on Windows, Mac and Linux) ----------
+
+// One file or folder name. Removes characters Windows doesn't allow, trailing dots and spaces,
+// and names Windows reserves (CON, NUL, COM1...).
+function safeName(t, fallback = 'file') {
+  let s = String(t || '').replace(/[\u0000-\u001f<>:"/\\|?*]+/g, ' ').replace(/\s+/g, ' ').trim()
+    .replace(/[. ]+$/, '').replace(/^\.+/, '').slice(0, 80).trim();
+  if (/^(con|prn|aux|nul|com\d|lpt\d)(\..*)?$/i.test(s)) s += '_';
+  return s || fallback;
+}
+
+// A path inside Downloads, like "job-tracker/jobs.csv". Chrome needs "/" and no "..".
+function safePath(p, fallback) {
+  const parts = String(p || '').split(/[\\/]+/).map(x => x.trim())
+    .filter(x => x && x !== '.' && x !== '..').map(x => safeName(x));
+  return parts.length ? parts.join('/') : fallback;
+}
+
+// Asks the background to write the CSV and/or the cover letter PDF (see background.js).
+function writeFiles(what) {
+  return chrome.runtime.sendMessage({ type: 'writeFiles', ...what }).catch(e => ({ error: e.message }));
+}
+
+// Waits until a download has finished (or failed). Returns the download item, or null.
+async function downloadDone(id, timeoutMs = 15000) {
+  const end = Date.now() + timeoutMs;
+  while (Date.now() < end) {
+    const [item] = await chrome.downloads.search({ id });
+    if (item && item.state !== 'in_progress') return item;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return null;
+}
+
+// Does the full path Chrome reports (C:\Users\..\Downloads\x\y.csv or /home/../Downloads/x/y.csv)
+// end in our relative path? Ignores case (Windows and Mac don't care about it).
+function isSameFile(fullPath, relPath) {
+  return String(fullPath).replace(/\\/g, '/').toLowerCase().endsWith('/' + relPath.toLowerCase());
+}
+
+// The CSV path this install may replace is stored in csvOwned. It is set when this install
+// first created the file, or after you imported it, or chose to replace it. A CSV that is
+// already there otherwise (for example after reinstalling the extension) is never replaced:
+// its jobs would be lost, because the extension can't read files by itself.
+//
+// Returns { written: true }, { blocked: true } (an old file is there and was left alone),
+// or { written: false } (Chrome didn't finish, e.g. a Save dialog was closed).
+// replace = true replaces an old file anyway (after the user said yes).
 // saveAs = true shows the "Save as" dialog (used by the Export button).
-async function writeCsv(settings, { saveAs = false, force = false } = {}) {
+async function writeCsv(settings, { saveAs = false, force = false, replace = false } = {}) {
   if (!settings.writeCsv && !force) return null;
-  const jobs = await getJobs();
-  const url = 'data:text/csv;charset=utf-8,' + encodeURIComponent(toCsv(jobs));
-  return chrome.downloads.download({
-    url,
-    filename: settings.csvPath || SETTINGS_DEFAULTS.csvPath,
+  const filename = safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath);
+  const url = 'data:text/csv;charset=utf-8,' + encodeURIComponent(toCsv(await getJobs()));
+  if (saveAs) {
+    await chrome.downloads.download({ url, filename, conflictAction: 'uniquify', saveAs: true });
+    return { written: true };
+  }
+  const { csvOwned } = await chrome.storage.local.get('csvOwned');
+  if (replace || csvOwned === filename) {
+    await chrome.downloads.download({ url, filename, conflictAction: 'overwrite', saveAs: false });
+    if (replace) await chrome.storage.local.set({ csvOwned: filename });
+    return { written: true };
+  }
+  // First time for this path: let Chrome rename if a file is already there, then look.
+  const id = await chrome.downloads.download({ url, filename, conflictAction: 'uniquify', saveAs: false });
+  const item = await downloadDone(id);
+  if (!item || item.state !== 'complete') return { written: false };
+  if (isSameFile(item.filename, filename)) {
+    await chrome.storage.local.set({ csvOwned: filename });
+    return { written: true };
+  }
+  // Renamed (like "jobs (1).csv"): the old file is there. Remove our copy, keep theirs.
+  try { await chrome.downloads.removeFile(id); } catch (e) { /* ignore */ }
+  try { await chrome.downloads.erase({ id }); } catch (e) { /* ignore */ }
+  return { blocked: true };
+}
+
+// After importing a CSV: if it's the file at our CSV path (same file name), the Tracker now has
+// its jobs, so it's safe to replace it from now on.
+async function markCsvImported(settings, importedName) {
+  const filename = safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath);
+  const base = filename.split('/').pop().toLowerCase();
+  if (String(importedName).toLowerCase() === base) await chrome.storage.local.set({ csvOwned: filename });
+}
+
+// Message shown when an old CSV was left alone.
+function csvBlockedText(settings) {
+  return `Downloads/${safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath)} already exists and was not changed, ` +
+    `so its jobs aren't lost. On the Tracker page, click "Import CSV…" and pick that file. After that it is kept up to date.`;
+}
+
+// ---------- Cover letter PDF ----------
+
+// The letter text with the template filled in (still has **bold** and # marks).
+// The job title is used without work-type tags, so a letter doesn't say "the Java Engineer [Hybrid]
+// position". Removes [Hybrid], (Remote - US), "- Onsite", "| Hybrid/Remote" and the like.
+// The Tracker and the CSV keep the full title.
+const WORK_TYPE = '(?:hybrid|remote|on[- ]?site|in[- ]office|wfh|work from home)';
+function letterRole(title) {
+  const t = String(title || '');
+  const cleaned = t
+    .replace(new RegExp(`\\s*[\\[(][^\\])]*\\b${WORK_TYPE}\\b[^\\])]*[\\])]`, 'gi'), '')
+    .replace(new RegExp(`\\s*[-–—|,:]\\s*${WORK_TYPE}(?:\\s*[-–—/,&]\\s*${WORK_TYPE})*(?:\\s*[-–—,]\\s*[A-Za-z .,]{0,30})?\\s*$`, 'i'), '')
+    .replace(/\s*[-–—|,:]\s*$/, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return cleaned || t.trim();
+}
+
+function filledLetter(job, settings) {
+  return fillTemplate(settings.letterTemplate, { ...job, title: letterRole(job.title) }, settings);
+}
+
+function letterFileName(job) {
+  return safeName(`Cover Letter - ${safeName(job.company, 'Company')} - ${safeName(letterRole(job.title), 'Role')}`, 'Cover Letter')
+    + '.pdf';
+}
+
+// Saves the letter PDF to Downloads/<letterFolder>/ and deletes the one saved before it,
+// so the folder only has the newest letter. Must run in the background (a closing popup
+// would cancel the download). Needs pdf.js.
+async function saveLetterPdf(job, settings) {
+  const filename = safePath(settings.letterFolder, SETTINGS_DEFAULTS.letterFolder) + '/' + letterFileName(job);
+  const id = await chrome.downloads.download({
+    url: 'data:application/pdf;base64,' + letterPdfBase64(filledLetter(job, settings)),
+    filename,
     conflictAction: 'overwrite',
-    saveAs
+    saveAs: false
   });
+  // Delete the old letter only once the new one is really saved (a closed Save box cancels it).
+  const item = await downloadDone(id);
+  if (!item || item.state !== 'complete') return null;
+  const { lastLetter } = await chrome.storage.local.get('lastLetter');
+  if (lastLetter?.id && lastLetter.id !== id && !isSameFile(item.filename, lastLetter.filename)) await deleteDownload(lastLetter.id);
+  await chrome.storage.local.set({ lastLetter: { id, filename, jobId: job.id } });
+  return filename;
+}
+
+// Deletes a file this extension downloaded (by download id; never anything else).
+async function deleteDownload(id) {
+  try { await chrome.downloads.removeFile(id); } catch (e) { /* already gone */ }
+  try { await chrome.downloads.erase({ id }); } catch (e) { /* ignore */ }
 }
 
 // ---------- Filling the templates ----------

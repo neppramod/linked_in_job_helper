@@ -76,10 +76,12 @@
 
 ## 9. Other choices (tick all you want)
 
+- [x] Save the job as soon as I click the extension icon
 - [x] Hide jobs I already applied to
 - [x] Rate a job Weak if it is a company type I do not want
 - [x] Update my spreadsheet (CSV file) every time I save a job
 - [x] Open the cover letter after I save a job
+- [x] Save the cover letter as a PDF every time I save a job
 
 ## 10. Hidden jobs (pick one)
 
@@ -107,7 +109,14 @@
 
 - job-tracker/jobs.csv
 
-## 14. What to copy when you save a job
+## 14. Where to save the cover letter PDF
+
+> A folder inside your Downloads folder.
+> Only the newest cover letter is kept: the old one is deleted when you save a new job.
+
+- cover-letters
+
+## 15. What to copy when you save a job
 
 > The text between the two ``` lines is copied.
 > These are replaced for each job:
@@ -119,7 +128,7 @@
 {{LINK}}
 ```
 
-## 15. Your cover letter
+## 16. Your cover letter
 
 > Write your letter between the two ``` lines.
 > Replace everything in [square brackets] with your own words.

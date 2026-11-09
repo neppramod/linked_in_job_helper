@@ -50,6 +50,9 @@ const SETTINGS_DEFAULTS = {
   copyFormat: '{{COMPANY}}\n{{ROLE}}\n{{LINK}}',
   writeCsv: true,
   csvPath: 'job-tracker/jobs.csv',  // inside the Downloads folder
+  autoSave: true,                   // save the job as soon as the extension icon is clicked
+  saveLetterPdf: true,              // save the cover letter PDF when a job is saved
+  letterFolder: 'cover-letters',    // inside the Downloads folder; only the newest letter is kept
   openLetterAfterSave: true,
 
   // Cover letter. Placeholders: {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}}
@@ -120,6 +123,18 @@ const toRegex = (list) => list.length ? new RegExp(
   '(?<![A-Za-z0-9])(' +
   list.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')).join('|') +
   ')(?![A-Za-z0-9])', 'i') : null;
+
+// False once the extension was reloaded or updated while this page stayed open. The old content
+// script keeps running then, but every chrome.* call throws "Extension context invalidated".
+function extensionAlive() {
+  try { return !!chrome.runtime?.id; } catch (e) { return false; }
+}
+
+// chrome.storage.local.set that does nothing (instead of throwing) after a reload.
+function storeLocal(items) {
+  if (!extensionAlive()) return Promise.resolve();
+  try { return chrome.storage.local.set(items).catch(() => {}); } catch (e) { return Promise.resolve(); }
+}
 
 function loadSettings() {
   return new Promise(resolve => chrome.storage.local.get('settings', d =>

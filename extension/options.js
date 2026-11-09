@@ -2,9 +2,9 @@
 
 const $ = (id) => document.getElementById(id);
 const TEXT_FIELDS = ['strengths', 'mustHave', 'gaps', 'hideKeywords', 'hideCompanies', 'flagDescription',
-  'avoidIndustries', 'csvPath', 'copyFormat', 'letterTemplate'];
+  'avoidIndustries', 'csvPath', 'letterFolder', 'copyFormat', 'letterTemplate'];
 const NUMBER_FIELDS = ['heavyGap', 'strongMin'];
-const CHECK_FIELDS = ['hideApplied', 'avoidIsWeak', 'writeCsv', 'openLetterAfterSave'];
+const CHECK_FIELDS = ['autoSave', 'hideApplied', 'avoidIsWeak', 'writeCsv', 'openLetterAfterSave', 'saveLetterPdf'];
 const SELECT_FIELDS = ['filterAction', 'dateFormat'];
 
 let dirty = false;
@@ -27,15 +27,20 @@ function read() {
   SELECT_FIELDS.forEach(k => { s[k] = $(k).value; });
   s.govMode = document.querySelector('input[name=govMode]:checked')?.value || '';
   s.csvPath = cleanCsvPath(s.csvPath);
+  s.letterFolder = cleanFolder(s.letterFolder);
   return s;
 }
 
 // Chrome only saves inside Downloads, with a relative path and no "..".
 function cleanCsvPath(p) {
-  p = String(p || '').trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/(^|\/)\.\.(?=\/|$)/g, '');
-  if (!p) p = SETTINGS_DEFAULTS.csvPath;
+  p = safePath(p, SETTINGS_DEFAULTS.csvPath);
   if (!/\.csv$/i.test(p)) p += '.csv';
   return p;
+}
+
+// A folder inside Downloads: relative, no "..", no file name.
+function cleanFolder(p) {
+  return safePath(p, SETTINGS_DEFAULTS.letterFolder);
 }
 
 function status(msg, ok) {
@@ -58,6 +63,7 @@ async function save() {
   }
   await saveSettings(s);
   $('csvPath').value = s.csvPath;
+  $('letterFolder').value = s.letterFolder;
   $('welcome').hidden = true;
   dirty = false;
   status('Saved. Open LinkedIn jobs to see it in action.', true);
@@ -151,3 +157,76 @@ syncSetupMd(false).then(async (r) => {
   if (r.applied || r.error) setupMsg(r);
   fill(await loadSettings());
 });
+
+// ---------- Folder for files ----------
+
+async function showFolder() {
+  const h = await getFolder();
+  const st = await folderState(false);
+  $('folderName').textContent = !h ? 'Not chosen yet. Files go to your Downloads folder (Chrome may ask where to save).'
+    : st === 'granted' ? h.name : `${h.name} (Chrome needs you to click "Allow again")`;
+  $('forgetFolder').hidden = !h;
+  $('allowFolder').hidden = !h || st === 'granted';
+}
+
+function folderMsg(msg, ok) {
+  $('folderMsg').textContent = msg;
+  $('folderMsg').className = 'status ' + (ok ? 'ok' : 'err');
+}
+
+// A new folder also gets the cover letter of the most recently saved job, so it's ready to upload.
+async function newestLetterJob() {
+  const s = await loadSettings();
+  if (!s.saveLetterPdf) return null;
+  const jobs = await getJobs();
+  const newest = jobs.reduce((a, j) => (!a || String(j.savedAt) > String(a.savedAt) ? j : a), null);
+  return newest?.id || null;
+}
+
+function folderResult(r) {
+  if (r.error) return folderMsg('Could not write to the folder: ' + r.error, false);
+  if (r.csvBlocked) return folderMsg(r.csvBlocked, false);
+  folderMsg('Done. ' + (r.csv ? `${r.csv} is up to date.` : '') + (r.letter ? ` Cover letter: ${r.letter}.` : '') +
+    (r.merged ? ` ${r.merged} job${r.merged === 1 ? '' : 's'} from the old file were added to the Tracker.` : ''), true);
+}
+
+$('pickFolder').addEventListener('click', async () => {
+  if (!window.showDirectoryPicker) {
+    folderMsg('This browser can\'t pick a folder. Files will go to Downloads.', false);
+    return;
+  }
+  try {
+    const h = await showDirectoryPicker({ id: 'job-helper', mode: 'readwrite', startIn: 'documents' });
+    await setFolder(h);
+    folderResult(await saveFiles({ csv: true, letterFor: await newestLetterJob() }));
+  } catch (e) {
+    if (e.name !== 'AbortError') folderMsg(e.message, false);
+  }
+  showFolder();
+if (location.hash === '#folder') {
+  $('folder').scrollIntoView({ block: 'center' });
+  $('pickFolder').focus();
+}
+});
+$('allowFolder').addEventListener('click', async () => {
+  if ((await folderState(true)) === 'granted') folderResult(await saveFiles({ csv: true }));
+  showFolder();
+if (location.hash === '#folder') {
+  $('folder').scrollIntoView({ block: 'center' });
+  $('pickFolder').focus();
+}
+});
+$('forgetFolder').addEventListener('click', async () => {
+  await setFolder(null);
+  folderMsg('Files will go to your Downloads folder again.', true);
+  showFolder();
+if (location.hash === '#folder') {
+  $('folder').scrollIntoView({ block: 'center' });
+  $('pickFolder').focus();
+}
+});
+showFolder();
+if (location.hash === '#folder') {
+  $('folder').scrollIntoView({ block: 'center' });
+  $('pickFolder').focus();
+}

@@ -6,7 +6,7 @@ Nothing else to install.
 - **Save a job in one click.** Company, job title and link are copied, added to a tracker, and written to a
   spreadsheet (CSV) you can open in Excel or Google Sheets.
 - **Cover letter for each job.** Your template is filled in with the company, job title and date.
-  Save it as a PDF or copy the text.
+  It is saved as a PDF automatically, ready to upload. Only the newest one is kept.
 - **Fit rating.** When you open a job, a box shows which of your skills it mentions and rates it
   **Strong**, **Mixed** or **Weak**. It also shows the salary (when listed) and what kind of company it is.
 - **Hide jobs you don't want.** By words, by company, jobs you already applied to, and (if you choose)
@@ -54,17 +54,30 @@ What you'll be asked:
 4. **Words and companies to hide** (optional).
 5. **Your cover letter.** Replace the `[bracketed]` parts with your own words.
 
+**Then pick a folder (recommended).** On the Settings page, under **Saving jobs**, click **Choose folder…**
+and pick (or make) a folder, for example `Documents\Job search`. The spreadsheet and cover letters are
+saved straight into it, without a "Save as" box. If the folder already has a `jobs.csv`, its jobs are
+added to the Tracker first. After Chrome restarts it may ask you to click **Allow** once.
+Without a folder, files go to your Downloads folder, and Chrome's **"Ask where to save each file before
+downloading"** must be off (Chrome settings → **Downloads**), or a Save box opens every time.
+
 ---
 
 ## Use it
 
 1. Open a job on LinkedIn.
 2. Click the extension icon (or press **Alt+Shift+L**).
-3. Check the company and job title. Fix them in the boxes if needed.
-4. Click **Save job**.
-   - The job is copied to your clipboard and added to the Tracker.
-   - The spreadsheet is updated: `Downloads\job-tracker\jobs.csv`
-   - The cover letter opens. Click **Save as PDF / Print**, and choose **Save as PDF** as the printer.
+3. That's it. The job is saved right away:
+   - copied to your clipboard and added to the Tracker,
+   - `jobs.csv` is updated (in your folder, or `Downloads\job-tracker\jobs.csv`),
+   - the cover letter is saved as a PDF in `cover-letters\Cover Letter - Company - Job title.pdf`.
+     The letter from the job you saved before is deleted, so the folder only has the one to upload now.
+   - The cover letter opens, so you can check it. **Save PDF to folder** saves it again (for example after
+     you changed your template).
+4. If the company or job title wasn't found, type it in the box and click **Save job**.
+   (To always click **Save job** yourself, untick "Save the job as soon as I click the extension icon" in Settings.)
+5. Removing jobs (in the Tracker, **Delete all**, the **Remove** button, or **Alt+Shift+R**) updates `jobs.csv`
+   too, and deletes that job's cover letter.
 
 Other things:
 
@@ -90,6 +103,9 @@ Other things:
   changes made in Excel are replaced the next time a job is saved.
 - To get jobs back from the file (new computer, reinstall, different folder): Tracker → **Import CSV…**.
   Jobs already in the Tracker are kept as they are; only missing ones are added.
+- **After a reinstall your old `jobs.csv` is never replaced by itself.** If the file is already there, saving a
+  job leaves it alone and tells you to import it. After you import it (Tracker → **Import CSV…**, pick that
+  `jobs.csv`), it is kept up to date again, with your old jobs and the new ones.
 
 ---
 
@@ -151,12 +167,14 @@ extension/
   setup-md.js          Reads and writes SETUP.md
   filter.js            Hides job cards on LinkedIn, red warnings, the grey box
   fit.js               Fit box, company type, salary, badges on job cards
-  shared.js            Reading a job from the page, saved jobs, CSV, filling templates
+  shared.js            Reading a job from the page, saved jobs, CSV, safe file names, filling templates
+  pdf.js               Makes the cover letter PDF (no print dialog)
+  files.js             Saving into the folder picked in Settings
   popup.*              The window that opens from the toolbar icon
   options.*            Settings page
   tracker.*            Tracker page
   letter.*             Cover letter page
-  background.js        First-time setup, SETUP.md checks, Alt+Shift+R
+  background.js        First-time setup, SETUP.md checks, writes the CSV and PDF, Alt+Shift+R
   page.css             Style for the Settings, Tracker and Cover letter pages
 ```
 

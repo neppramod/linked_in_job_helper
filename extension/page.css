@@ -53,3 +53,5 @@ td a { color: var(--accent); }
 .pill.Strong { color: #0b5d26; background: #e3f6e8; border-color: #7cc791; }
 .pill.Mixed { color: #8a4b00; background: #fff2db; border-color: #e8b766; }
 .pill.Weak { color: #a1001b; background: #fde4e4; border-color: #ec8f8f; }
+.folder-box { background: var(--accent-light); border: 1px solid var(--accent); border-radius: 8px; padding: 12px 16px; margin: 4px 0 16px; }
+.folder-box .row { gap: 10px; }

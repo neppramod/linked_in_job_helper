@@ -177,7 +177,7 @@ function remember(id, title, verdict, info) {
   if (id && JSON.stringify(fitInfo[id]) !== JSON.stringify(info)) {
     fitInfo[id] = info;
     fitInfo = Object.fromEntries(Object.entries(fitInfo).slice(-3000));
-    chrome.storage.local.set({ fitInfo });
+    storeLocal({ fitInfo });
   }
   if (verdict === 'Unrated') return;   // no badge without a rating
   let changed = false;
@@ -188,7 +188,7 @@ function remember(id, title, verdict, info) {
   const trim = (o) => Object.fromEntries(Object.entries(o).slice(-3000));
   fitById = trim(fitById);
   fitByTitle = trim(fitByTitle);
-  chrome.storage.local.set({ fitById, fitByTitle });
+  storeLocal({ fitById, fitByTitle });
 }
 
 function scanFitPanel() {

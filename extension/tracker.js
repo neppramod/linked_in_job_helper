@@ -9,14 +9,33 @@ function status(msg, ok = true) {
   $('status').className = 'status ' + (ok ? 'ok' : 'err');
 }
 
+let removedSince = [];   // jobs removed since the last write (their cover letter is deleted)
+
+// Shows the result of saveFiles().
+function showFiles(r) {
+  $('allowFolder').hidden = !r?.needAllow;
+  if (!r) return;
+  if (r.error) status('Could not write the file: ' + r.error, false);
+  else if (r.needAllow) status(`Click "Allow" so the CSV can be saved to your "${r.folderName}" folder.`, false);
+  else if (r.csvBlocked) status(r.csvBlocked, false);
+  else if (r.csv) status('CSV updated: ' + (r.inFolder ? r.csv : 'Downloads/' + r.csv) +
+    (r.merged ? ` (${r.merged} job${r.merged === 1 ? '' : 's'} from the old file added here)` : ''));
+}
+
 // Rewrite the CSV a moment after the last change, not on every keystroke.
-function csvSoon() {
-  if (!settings.writeCsv) return;
+// removedJob: a job id (or '*') that was just removed.
+function csvSoon(removedJob) {
+  if (removedJob) removedSince.push(removedJob);
+  chrome.storage.local.set({ csvStale: true });   // if this page closes first, the next page catches up
   clearTimeout(csvTimer);
-  csvTimer = setTimeout(async () => {
-    await writeCsv(settings);
-    status(`CSV updated: Downloads/${settings.csvPath}`);
-  }, 1500);
+  csvTimer = setTimeout(syncNow, 800);
+}
+
+async function syncNow() {
+  clearTimeout(csvTimer);
+  const removed = removedSince;
+  removedSince = [];
+  showFiles(await saveFiles({ csv: true, removedJob: removed.length ? removed : undefined }));
 }
 
 function el(tag, props = {}, ...children) {
@@ -56,7 +75,7 @@ async function render() {
     delBtn.addEventListener('click', async () => {
       if (!confirm(`Delete ${j.company} · ${j.title}?`)) return;
       await removeJob(j.link);
-      csvSoon();
+      csvSoon(j.id);
       render();
     });
 
@@ -77,9 +96,25 @@ async function render() {
 $('search').addEventListener('input', render);
 $('statusFilter').addEventListener('change', render);
 
+$('allowFolder').addEventListener('click', async () => {
+  if ((await folderState(true)) === 'granted') syncNow();
+  else status('Saving to the folder is still not allowed. Pick the folder again in Settings.', false);
+});
 $('writeCsv').addEventListener('click', async () => {
-  await writeCsv(settings, { force: true });
-  status(`Written to Downloads/${settings.csvPath}`);
+  if ((await folderState(false)) !== 'none') { syncNow(); return; }
+  const path = 'Downloads/' + safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath);
+  let r = await writeCsv(settings, { force: true });
+  if (r?.blocked) {
+    const n = (await getJobs()).length;
+    if (!confirm(`${path} already exists. Replace it with the ${n} job${n === 1 ? '' : 's'} in the Tracker?\n\n` +
+      'Jobs that are only in that file will be lost. Click Cancel, then "Import CSV…", to keep them.')) {
+      status(csvBlockedText(settings), false);
+      return;
+    }
+    r = await writeCsv(settings, { force: true, replace: true });
+  }
+  if (r?.written) status(`Written to ${path}`);
+  else status('The CSV was not written. If Chrome asked where to save, see "Ask where to save" in the README.', false);
 });
 $('exportCsv').addEventListener('click', () => writeCsv(settings, { force: true, saveAs: true }));
 $('importCsv').addEventListener('click', () => $('importFile').click());
@@ -89,11 +124,12 @@ $('importFile').addEventListener('change', async (e) => {
   if (!file) return;
   try {
     const r = await importCsv(await file.text());
+    await markCsvImported(settings, file.name);
     let msg = `Added ${r.added} job${r.added === 1 ? '' : 's'}.`;
     if (r.existing) msg += ` ${r.existing} already in the Tracker (kept as they are).`;
     if (r.skipped) msg += ` ${r.skipped} row${r.skipped === 1 ? '' : 's'} skipped (no job link).`;
     status(msg, r.added > 0 || r.existing > 0);
-    if (r.added) csvSoon();
+    csvSoon();   // the file now has everything from the Tracker and the import
     render();
   } catch (err) {
     status(err.message, false);
@@ -102,7 +138,7 @@ $('importFile').addEventListener('change', async (e) => {
 $('clearAll').addEventListener('click', async () => {
   if (!confirm('Delete ALL saved jobs? Export a CSV first if you want a copy.')) return;
   await setJobs([]);
-  csvSoon();
+  csvSoon('*');
   render();
 });
 
@@ -112,8 +148,12 @@ chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c.jo
 (async () => {
   settings = await loadSettings();
   STATUSES.forEach(s => $('statusFilter').append(el('option', { value: s, textContent: s })));
+  const folder = await getFolder();
+  const csvAt = folder ? `your "${folder.name}" folder (${folderCsvName(settings)})`
+    : 'Downloads/' + safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath);
   $('csvHelp').textContent = settings.writeCsv
-    ? `The CSV file is updated automatically: Downloads/${settings.csvPath}. Close it in Excel before saving jobs.`
+    ? `The CSV file is updated automatically: ${csvAt}. Close it in Excel before saving jobs.`
     : 'Automatic CSV writing is off (Settings → Saving jobs). Use "Write CSV now" or "Export CSV as…".';
   render();
+  showFiles(await catchUpCsv());
 })();

@@ -1,5 +1,6 @@
 // Cover letter page: fills the template for one saved job.
-// "Save as PDF" uses Chrome's print dialog (choose "Save as PDF" as the printer).
+// "Save PDF to folder" makes the PDF itself (pdf.js, in the background) and keeps only the newest one.
+// "Print" uses Chrome's print dialog.
 
 const $ = (id) => document.getElementById(id);
 let plainText = '';
@@ -37,7 +38,7 @@ function status(msg, ok = true) {
     $('paper').textContent = 'This job is not in the Tracker anymore.';
     return;
   }
-  const filled = fillTemplate(settings.letterTemplate, job, settings);
+  const filled = filledLetter(job, settings);
   plainText = filled.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#{1,3}\s+/gm, '').replace(/ +$/gm, '');
   $('paper').innerHTML = render(filled);
 
@@ -48,14 +49,23 @@ function status(msg, ok = true) {
   // Checks, so a letter with leftovers isn't sent by mistake.
   const leftover = [...new Set(filled.match(/\{\{\s*[A-Za-z]+\s*\}\}/g) || [])];
   if (leftover.length) note('Unknown placeholders (only {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}} work): ' + leftover.join(' '));
-  // Only brackets with words in them, so a name like "[1]Corp" is not flagged.
-  const brackets = [...new Set(filled.match(/\[[^\]\n]{0,80}[A-Za-z]{2}[^\]\n]{0,80}\]/g) || [])];
+  // Only brackets with words in them, so a name like "[1]Corp" is not flagged. Checks the template,
+  // not the filled letter: a job title like "Java Engineer [Hybrid]" is not something to replace.
+  const brackets = [...new Set(String(settings.letterTemplate || '').match(/\[[^\]\n]{0,80}[A-Za-z]{2}[^\]\n]{0,80}\]/g) || [])];
   if (brackets.length) note('Your template still has [bracketed] parts to replace: ' + brackets.slice(0, 6).join(' ') +
     (brackets.length > 6 ? ' …' : '') + '. Click "Edit template".');
   if (!job.company || !job.title) note('The company or job title is empty. Check the job in the Tracker.');
 })();
 
 $('print').addEventListener('click', () => window.print());
+$('savePdf').addEventListener('click', async () => {
+  if (!job) return;
+  let r = await saveFiles({ letterFor: job.id });
+  if (r?.needAllow && (await folderState(true)) === 'granted') r = await saveFiles({ letterFor: job.id });
+  if (r?.needAllow) status(`Saving to your "${r.folderName}" folder is not allowed. Pick it again in Settings.`, false);
+  else if (r?.error || !r?.letter) status('Could not save the PDF: ' + (r?.error || 'the Save box was closed'), false);
+  else status('Saved to ' + (r.inFolder ? r.letter : 'Downloads/' + r.letter));
+});
 $('copy').addEventListener('click', async () => {
   await navigator.clipboard.writeText(plainText);
   status('Copied.');

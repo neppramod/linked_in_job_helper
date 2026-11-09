@@ -114,9 +114,27 @@
   <!-- 4. Saving jobs -->
   <section>
     <h2>4. Saving jobs</h2>
-    <p class="help">Clicking <b>Save job</b> in the popup copies the job to your clipboard, adds it to the Tracker,
+    <p class="help">Clicking the extension icon (or <b>Save job</b> in the popup) copies the job to your clipboard, adds it to the Tracker,
       and writes the whole list to a CSV file you can open in Excel or Google Sheets.</p>
 
+    <div class="folder-box" id="folder">
+      <label class="field">Folder for your spreadsheet and cover letters</label>
+      <div><b id="folderName">Not chosen yet</b></div>
+      <div class="row" style="margin-top:6px">
+        <button id="pickFolder" type="button" class="primary">Choose folder…</button>
+        <button id="allowFolder" type="button" hidden>Allow again</button>
+        <button id="forgetFolder" type="button" hidden>Stop using this folder</button>
+      </div>
+      <p class="help">Recommended. Pick a folder once, for example <code>Documents\Job search</code>. Then the
+        spreadsheet and the cover letter are saved straight into it, without a "Save as" box. If the folder
+        already has a <code>jobs.csv</code>, its jobs are added to the Tracker first, so nothing is lost.
+        The cover letter of the job you saved last is saved there too. Nothing in the old folder is moved or deleted.
+        Chrome may ask you to click <b>Allow</b> again after it restarts. Chrome doesn't allow the Downloads
+        folder itself, but a folder inside it is fine. Without a folder, files go to Downloads.</p>
+      <p id="folderMsg" class="status"></p>
+    </div>
+
+    <label class="check"><input type="checkbox" id="autoSave"> Save the job as soon as I click the extension icon</label>
     <label class="check"><input type="checkbox" id="writeCsv"> Update my spreadsheet (CSV file) every time I save a job</label>
     <label class="field" for="csvPath">Where to save the spreadsheet (inside your Downloads folder)</label>
     <input type="text" id="csvPath">
@@ -128,6 +146,11 @@
     <p class="help">Placeholders: <code>{{COMPANY}}</code> <code>{{ROLE}}</code> <code>{{LINK}}</code> <code>{{DATE}}</code></p>
 
     <label class="check"><input type="checkbox" id="openLetterAfterSave"> Open the cover letter after I save a job</label>
+    <label class="check"><input type="checkbox" id="saveLetterPdf"> Save the cover letter as a PDF every time I save a job</label>
+    <label class="field" for="letterFolder">Where to save the cover letter PDF (a folder inside your Downloads folder)</label>
+    <input type="text" id="letterFolder">
+    <p class="help">Only the newest cover letter is kept there: the old one is deleted when you save a new job.
+      Upload it from that folder; you don't need to print it.</p>
   </section>
 
   <!-- 5. Cover letter -->
@@ -169,6 +192,9 @@
 
 <script src="settings-store.js"></script>
 <script src="setup-md.js"></script>
+<script src="shared.js"></script>
+<script src="pdf.js"></script>
+<script src="files.js"></script>
 <script src="options.js"></script>
 </body>
 </html>
