@@ -126,7 +126,8 @@ async function removeLetterOfJob(root, removed) {
 
 // The one function pages call to write files.
 //   csv: rewrite jobs.csv. letterFor: job id whose cover letter to save. removedJob: job id(s) just
-//   removed, or '*' for all (their cover letter is deleted).
+//   removed, or '*' for all (their cover letter is deleted). force: write the CSV even if automatic
+//   CSV writing is off ("Write CSV now").
 // Returns { csv, letter, merged, csvBlocked, needAllow, inFolder, folderName, error }.
 async function saveFiles(what) {
   const settings = await loadSettings();
@@ -143,7 +144,7 @@ async function saveFiles(what) {
   const out = { inFolder: true, folderName: root.name };
   try {
     if (what.removedJob) await removeLetterOfJob(root, what.removedJob);
-    if (what.csv && settings.writeCsv) Object.assign(out, await writeCsvToFolder(root, settings));
+    if (what.csv && (settings.writeCsv || what.force)) Object.assign(out, await writeCsvToFolder(root, settings));
     if (what.letterFor) {
       const job = (await getJobs()).find(j => j.id === what.letterFor);
       if (job) out.letter = await saveLetterToFolder(root, job, settings);

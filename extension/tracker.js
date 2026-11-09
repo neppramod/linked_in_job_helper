@@ -31,11 +31,11 @@ function csvSoon(removedJob) {
   csvTimer = setTimeout(syncNow, 800);
 }
 
-async function syncNow() {
+async function syncNow(force = false) {
   clearTimeout(csvTimer);
   const removed = removedSince;
   removedSince = [];
-  showFiles(await saveFiles({ csv: true, removedJob: removed.length ? removed : undefined }));
+  showFiles(await saveFiles({ csv: true, force, removedJob: removed.length ? removed : undefined }));
 }
 
 function el(tag, props = {}, ...children) {
@@ -111,7 +111,7 @@ $('allowFolder').addEventListener('click', async () => {
   else status('Saving to the folder is still not allowed. Pick the folder again in Settings.', false);
 });
 $('writeCsv').addEventListener('click', async () => {
-  if ((await folderState(false)) !== 'none') { syncNow(); return; }
+  if ((await folderState(false)) !== 'none') { syncNow(true); return; }
   const path = 'Downloads/' + safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath);
   let r = await writeCsv(settings, { force: true });
   if (r?.blocked) {
