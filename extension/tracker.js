@@ -51,6 +51,10 @@ async function render() {
   const jobs = (await getJobs()).filter(j =>
     (!sf || j.status === sf) &&
     (!q || [j.company, j.title, j.notes, j.industry].join(' ').toLowerCase().includes(q)));
+  // Stored newest first; sort by date saved anyway (imports, same-day dates). Ties keep stored order.
+  const dir = settings?.trackerOrder === 'oldest' ? -1 : 1;
+  const pos = new Map(jobs.map((j, i) => [j, i]));
+  jobs.sort((a, b) => dir * (String(b.savedAt).localeCompare(String(a.savedAt)) || pos.get(a) - pos.get(b)));
 
   const tbody = $('rows');
   tbody.replaceChildren();
@@ -95,6 +99,12 @@ async function render() {
 
 $('search').addEventListener('input', render);
 $('statusFilter').addEventListener('change', render);
+$('order').addEventListener('change', async () => {
+  settings.trackerOrder = $('order').value;
+  // Merge into what's stored, so a change made elsewhere isn't lost.
+  await saveSettings({ ...(await loadSettings()), trackerOrder: settings.trackerOrder });
+  render();
+});
 
 $('allowFolder').addEventListener('click', async () => {
   if ((await folderState(true)) === 'granted') syncNow();
@@ -148,6 +158,7 @@ chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c.jo
 (async () => {
   settings = await loadSettings();
   STATUSES.forEach(s => $('statusFilter').append(el('option', { value: s, textContent: s })));
+  $('order').value = settings.trackerOrder === 'oldest' ? 'oldest' : 'newest';
   const folder = await getFolder();
   const csvAt = folder ? `your "${folder.name}" folder (${folderCsvName(settings)})`
     : 'Downloads/' + safePath(settings.csvPath, SETTINGS_DEFAULTS.csvPath);

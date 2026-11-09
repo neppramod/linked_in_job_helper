@@ -54,6 +54,7 @@ const SETTINGS_DEFAULTS = {
   saveLetterPdf: true,              // save the cover letter PDF when a job is saved
   letterFolder: 'cover-letters',    // inside the Downloads folder; only the newest letter is kept
   openLetterAfterSave: false,
+  trackerOrder: 'newest',           // Tracker list: 'newest' or 'oldest' first (set on the Tracker page)
 
   // Cover letter. Placeholders: {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}}
   letterTemplate: DEFAULT_TEMPLATE,

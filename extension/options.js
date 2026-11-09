@@ -54,6 +54,7 @@ function showPreset() {
 
 async function save() {
   const s = read();
+  s.trackerOrder = (await loadSettings()).trackerOrder;   // set on the Tracker page, not here
   if (!s.govMode) {
     $('gov-section').classList.add('required');
     $('gov-error').hidden = false;
