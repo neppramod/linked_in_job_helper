@@ -80,7 +80,7 @@
 - [x] Hide jobs I already applied to
 - [x] Rate a job Weak if it is a company type I do not want
 - [x] Update my spreadsheet (CSV file) every time I save a job
-- [x] Open the cover letter after I save a job
+- [ ] Open the cover letter after I save a job
 - [x] Save the cover letter as a PDF every time I save a job
 
 ## 10. Hidden jobs (pick one)

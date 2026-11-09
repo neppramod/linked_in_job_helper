@@ -53,7 +53,7 @@ const SETTINGS_DEFAULTS = {
   autoSave: true,                   // save the job as soon as the extension icon is clicked
   saveLetterPdf: true,              // save the cover letter PDF when a job is saved
   letterFolder: 'cover-letters',    // inside the Downloads folder; only the newest letter is kept
-  openLetterAfterSave: true,
+  openLetterAfterSave: false,
 
   // Cover letter. Placeholders: {{COMPANY}} {{ROLE}} {{DATE}} {{LINK}}
   letterTemplate: DEFAULT_TEMPLATE,

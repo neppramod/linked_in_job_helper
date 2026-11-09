@@ -72,8 +72,9 @@ downloading"** must be off (Chrome settings → **Downloads**), or a Save box op
    - `jobs.csv` is updated (in your folder, or `Downloads\job-tracker\jobs.csv`),
    - the cover letter is saved as a PDF in `cover-letters\Cover Letter - Company - Job title.pdf`.
      The letter from the job you saved before is deleted, so the folder only has the one to upload now.
-   - The cover letter opens, so you can check it. **Save PDF to folder** saves it again (for example after
-     you changed your template).
+   - To check the letter, click **Cover letter** in the popup. **Save PDF to folder** there saves it again
+     (for example after you changed your template). To open it every time, tick "Open the cover letter
+     after I save a job" in Settings.
 4. If the company or job title wasn't found, type it in the box and click **Save job**.
    (To always click **Save job** yourself, untick "Save the job as soon as I click the extension icon" in Settings.)
 5. Removing jobs (in the Tracker, **Delete all**, the **Remove** button, or **Alt+Shift+R**) updates `jobs.csv`
