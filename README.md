@@ -135,6 +135,33 @@ Your settings and saved jobs are kept. They're stored in Chrome, not in the fold
 > (Settings → **Export settings**). Removing the extension deletes them from Chrome.
 > To bring them back: Tracker → **Import CSV…** and Settings → **Import settings**.
 
+## Moving the extension to another folder (reinstalling)
+
+Removing the extension deletes what it keeps in Chrome: the Tracker, your settings and the chosen folder.
+Your jobs come back from `jobs.csv` in your folder; your settings come back from `SETUP.md`. Do it in this order:
+
+**Before you remove it**
+
+1. Keep a copy of your `extension\SETUP.md` (your skills and cover letter are in it). If you changed things
+   on the Settings page, also click Settings → **Export settings**.
+2. Optional: Tracker → **Write CSV now**, so `jobs.csv` has your latest statuses and notes.
+
+**Reinstall**
+
+3. Get the new copy: on GitHub click **Code → Download ZIP** and unzip it where you want to keep it.
+4. Copy your `SETUP.md` into the new `extension` folder, replacing the one there. A new install reads it
+   once when it starts; without it you get the empty example.
+5. In `chrome://extensions`, **Remove** the old LinkedIn Job Helper, then **Load unpacked** and pick the new
+   `extension` folder. Don't keep both: they'd both answer the same clicks and shortcuts.
+6. If you exported settings in step 1: Settings → **Import settings**.
+7. Settings → **Choose folder…** and pick the same folder as before. Its `jobs.csv` is read and every job
+   comes back to the Tracker (status, notes, fit, salary, industry). After that it's kept up to date as before.
+8. Refresh any LinkedIn tabs that were open.
+
+What doesn't come back: which cover letter was saved last (so the letter in `cover-letters` isn't deleted on
+your next save; delete it yourself once), and fit ratings of jobs you only looked at (they come back as you
+browse).
+
 ---
 
 ## Troubleshooting
