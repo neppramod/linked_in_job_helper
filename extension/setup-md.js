@@ -63,12 +63,14 @@ const SETUP_SECTIONS = [
       ['strongMin', 'How many of your skills a job needs to be Strong']] },
 
   { title: '13. Where to save the spreadsheet', type: 'text', key: 'csvPath',
-    help: ['A folder and file name inside your Downloads folder.',
+    help: ['If you chose a folder in Settings, only the file name is used and the file goes there.',
+      'If not: a folder and file name inside your Downloads folder.',
       'Close the file in Excel before you save a new job.',
       'If it is open, Chrome may make a second copy, like jobs (1).csv.'] },
 
   { title: '14. Where to save the cover letter PDF', type: 'text', key: 'letterFolder',
-    help: ['A folder inside your Downloads folder.',
+    help: ['A folder for the letters, inside the folder you chose in Settings',
+      '(or inside your Downloads folder if you did not choose one).',
       'Only the newest cover letter is kept: the old one is deleted when you save a new job.'] },
 
   { title: '15. What to copy when you save a job', type: 'code', key: 'copyFormat',
